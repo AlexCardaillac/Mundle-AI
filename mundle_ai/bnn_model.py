@@ -1,10 +1,8 @@
 # Import libraries
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.distributions import Normal
+from torch.nn.functional.F import linear
 import numpy as np
-from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
 class DataManager(object):
@@ -66,7 +64,7 @@ class BnnLayer(nn.Module):
         self.input_features = input_features
         self.output_features = output_features
 
-        self.normal_d = Normal(torch.tensor(0.0, device=self.device), torch.tensor(1.0, device=self.device))
+        self.normal_d = torch.distributions.Normal(torch.tensor(0.0, device=self.device), torch.tensor(1.0, device=self.device))
 
         # initialize mu and rho parameters for the weights of the layer
         self.w_mu = nn.Parameter(
@@ -92,7 +90,7 @@ class BnnLayer(nn.Module):
 
         # initialize prior distribution for all of the weights and biases
         if type(prior_var) == float or type(prior_var) == int:
-            self.prior = Normal(torch.tensor(0.0, device=self.device), torch.tensor(prior_var, device=self.device))
+            self.prior = torch.distributions.Normal(torch.tensor(0.0, device=self.device), torch.tensor(prior_var, device=self.device))
         else:
             self.prior = ScaleMixtureGaussian(*torch.tensor(prior_var, device=self.device))
 
@@ -121,11 +119,11 @@ class BnnLayer(nn.Module):
         self.log_prior = torch.sum(w_log_prior) + torch.sum(b_log_prior)
 
         # record log variational posterior by evaluating log pdf of normal distribution defined by parameters with respect at the sampled values
-        w_post = Normal(self.w_mu.data, self.softmax(self.w_rho))
-        b_post = Normal(self.b_mu.data, self.softmax(self.b_rho))
+        w_post = torch.distributions.Normal(self.w_mu.data, self.softmax(self.w_rho))
+        b_post = torch.distributions.Normal(self.b_mu.data, self.softmax(self.b_rho))
         self.log_post = w_post.log_prob(self.w).sum() + b_post.log_prob(self.b).sum()
 
-        return F.linear(inputs, self.w, self.b)
+        return linear(inputs, self.w, self.b)
 
     def softmax(self, rho):
         """Softmax function
@@ -233,7 +231,7 @@ class BnnModelManager(object):
                 self.model.train() # prep model for training
 
             # for data, label in tqdm(data_manager.train_loader, miniters=nb_batches/100):
-            for batch_id, (data, label) in enumerate(data_manager.train_set):
+            for data, label in data_manager.train_set:
                 if self.cuda:
                     data, label = data.to(self.device), label.to(self.device)
                 # clear the gradients of all optimized variables

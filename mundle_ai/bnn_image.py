@@ -1,17 +1,14 @@
 #%%
 # Import libraries
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Normal
 import numpy as np
-from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
-from bnn_model import Bnn, BnnLayer, DataManager, BnnModelManager
+from .bnn_model import Bnn, DataManager, BnnModelManager
 
 
-class BnnIclass(Bnn):
+class BnnImgClass(Bnn):
     """
         Bayesian neural network implementing BNN. Image classification version.
     """
@@ -26,7 +23,7 @@ class BnnIclass(Bnn):
 
     # def sample_elbo(self, inputs, target, samples, num_batches=1, verbose=False):
     def sample_elbo(self, inputs, target, samples, nb_batches):
-        # we calculate the negative elbo, which will be our loss function
+        # we calculate the negative elbo
         #initialize tensors
 
         outputs = torch.zeros(samples, target.shape[0], self.output_units, device=self.device)
@@ -45,17 +42,13 @@ class BnnIclass(Bnn):
         neg_log_like = F.nll_loss(outputs.mean(0), target, size_average=False)
 
         # return the negative elbo
-        # loss = log_post - log_prior + neg_log_like
-        loss = (log_post - log_prior) / nb_batches + neg_log_like
         return self.loss_fn(log_post, log_prior, -neg_log_like, nb_batches)
-
-        # return loss#%%, outputs
 
 class ModelManager(BnnModelManager):
     def __init__(self, source=None, cuda=False, verbose=False, nn_layout=(6, 32, 1), prior_var=1.0):
         # initialize the NN
         super().__init__(
-            BnnIclass, nn_layout, prior_var,
+            BnnImgClass, nn_layout, prior_var,
             source, cuda, verbose)
 
     def test(self, data_manager, verbose=True, samples=100):
@@ -158,14 +151,13 @@ class ModelManager(BnnModelManager):
         else:
             u_map = grid
 
-        if verbose == True:
+        if verbose:
             plt.imshow(u_map, cmap='viridis')
             plt.tight_layout()
             plt.show()
         return u_map
 
     def model_explanation(self, img, top_labels=5, hide_color=0, num_samples=1000, segmenter=None, colored_image=False, u_map=None):
-        import lime
         from lime import lime_image
         from skimage.segmentation import mark_boundaries
         from skimage.color import rgb2gray

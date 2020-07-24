@@ -1,13 +1,10 @@
 #%%
 # Import libraries
 import numpy as np
-from torch import from_numpy, linspace
+from torch import from_numpy
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
-import matplotlib.pyplot as plt
-import torch
-
-import bnn_regression as b_reg
+import mundle_ai.bnn_regression as b_reg
 #%%
 class RegDataset(Dataset):
     def __init__(self, x_values, labels):

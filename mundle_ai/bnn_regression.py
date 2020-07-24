@@ -1,14 +1,11 @@
 #%%
 # Import libraries
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.distributions import Normal
 import numpy as np
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
-from bnn_model import Bnn, BnnLayer, DataManager, BnnModelManager
+from .bnn_model import Bnn, DataManager, BnnModelManager
 
 class BnnRegression(Bnn):
     """
@@ -36,7 +33,7 @@ class BnnRegression(Bnn):
             outputs[i] = self(inputs).reshape(-1) # call the forward pass / make predictions
             log_priors[i] = self.log_prior()
             log_posts[i] = self.log_post()
-            log_likes[i] = Normal(outputs[i], self.noise_tol).log_prob(target.reshape(-1)).sum()
+            log_likes[i] = torch.distributions.Normal(outputs[i], self.noise_tol).log_prob(target.reshape(-1)).sum()
 
         # calculate monte carlo estimate of prior posterior and likelihood
         log_prior = log_priors.mean()

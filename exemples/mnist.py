@@ -1,14 +1,11 @@
 #%%
 # Import libraries
 import numpy as np
-from torch import from_numpy, linspace
-from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
-import torch
-import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
+import torchvision.transforms as transforms
 from torchvision import datasets
-import bnn_image as b_img
+import mundle_ai.bnn_image as b_img
 #%%
 num_workers = 0
 batch_size = 128
@@ -28,15 +25,15 @@ train_index, valid_index = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_index)
 valid_sampler = SubsetRandomSampler(valid_index)
 
-train_loader = torch.utils.data.DataLoader(
+train_loader = DataLoader(
         train_data, batch_size=batch_size,
         sampler=train_sampler, num_workers=num_workers,
         pin_memory=True)
-valid_loader = torch.utils.data.DataLoader(
+valid_loader = DataLoader(
         train_data, batch_size=batch_size,
         sampler=valid_sampler, num_workers=num_workers,
         pin_memory=True)
-test_loader = torch.utils.data.DataLoader(
+test_loader = DataLoader(
         test_data, batch_size=batch_size,
         num_workers=num_workers, pin_memory=True)
 
@@ -46,7 +43,7 @@ print('Data loaded')
 #%%
 has_cuda = True
 model_file = None
-model_file = 'ex_mnist1.pt'
+# model_file = 'ex_mnist1.pt'
 
 # initialize the NN
 model = b_img.create_model(model_file, has_cuda, nn_layout=(28*28, 800, 10), prior_var=10.0)
